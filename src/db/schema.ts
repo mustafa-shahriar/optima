@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean, bigint, varchar, numeric, smallint, pgEnum } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, boolean, bigint, varchar, numeric, smallint, pgEnum, uniqueIndex } from 'drizzle-orm/pg-core';
 
 /* ── Better Auth core tables ───────────────────────────── */
 
@@ -53,7 +53,7 @@ export const verification = pgTable('verification', {
 /* ── App-specific tables ─────────────────────────────────── */
 
 export const students = pgTable('students', {
-  id: bigint('id', { mode: 'number' }).primaryKey(),
+  id: bigint('id', { mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
   regNumber: varchar('reg_number', { length: 32 }).notNull().unique(),
   name: varchar('name', { length: 120 }).notNull(),
   section: varchar('section', { length: 32 }).notNull(),
@@ -62,7 +62,7 @@ export const students = pgTable('students', {
 });
 
 export const claimRequests = pgTable('claim_requests', {
-  id: bigint('id', { mode: 'number' }).primaryKey(),
+  id: bigint('id', { mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
   userId: text('user_id').notNull(),
   studentId: bigint('student_id', { mode: 'number' }).notNull(),
   status: varchar('status', { length: 16 }).notNull().default('pending'),
@@ -73,26 +73,30 @@ export const claimRequests = pgTable('claim_requests', {
 });
 
 export const courses = pgTable('courses', {
-  id: bigint('id', { mode: 'number' }).primaryKey(),
+  id: bigint('id', { mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
   code: varchar('code', { length: 32 }).notNull(),
   name: varchar('name', { length: 160 }).notNull(),
   creditHours: numeric('credit_hours', { precision: 3, scale: 1 }).notNull().default('3.0'),
   yearLevel: smallint('year_level').notNull(),
   semester: smallint('semester').notNull(),
   academicYear: smallint('academic_year').notNull(),
-});
+}, (table) => ({
+  codeYear: uniqueIndex('courses_code_academic_year_uidx').on(table.code, table.academicYear),
+}));
 
 export const examTypeEnum = pgEnum('exam_type', ['attendance', 'term_test_1', 'term_test_2', 'quiz', 'final_exam']);
 
 export const exam = pgTable('exam', {
-  id: bigint('id', { mode: 'number' }).primaryKey(),
+  id: bigint('id', { mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
   courseId: bigint('course_id', { mode: 'number' }).notNull(),
   type: examTypeEnum('type').notNull(),
   maxMarks: numeric('max_marks', { precision: 5, scale: 2 }).notNull(),
-});
+}, (table) => ({
+  courseType: uniqueIndex('exam_course_type_uidx').on(table.courseId, table.type),
+}));
 
 export const resultComponents = pgTable('result_components', {
-  id: bigint('id', { mode: 'number' }).primaryKey(),
+  id: bigint('id', { mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
   studentId: bigint('student_id', { mode: 'number' }).notNull(),
   courseId: bigint('course_id', { mode: 'number' }).notNull(),
   term: varchar('term', { length: 32 }).notNull(),
@@ -100,10 +104,17 @@ export const resultComponents = pgTable('result_components', {
   marksObtained: numeric('marks_obtained', { precision: 5, scale: 2 }).notNull(),
   enteredBy: text('entered_by'),
   enteredAt: timestamp('entered_at', { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => ({
+  uniqueComponent: uniqueIndex('result_components_unique_uidx').on(
+    table.studentId,
+    table.courseId,
+    table.term,
+    table.examId,
+  ),
+}));
 
 export const gradingScale = pgTable('grading_scale', {
-  id: bigint('id', { mode: 'number' }).primaryKey(),
+  id: bigint('id', { mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
   minMarks: numeric('min_marks', { precision: 5, scale: 2 }).notNull(),
   maxMarks: numeric('max_marks', { precision: 5, scale: 2 }).notNull(),
   grade: varchar('grade', { length: 4 }).notNull(),
@@ -111,7 +122,7 @@ export const gradingScale = pgTable('grading_scale', {
 });
 
 export const questions = pgTable('questions', {
-  id: bigint('id', { mode: 'number' }).primaryKey(),
+  id: bigint('id', { mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
   courseId: bigint('course_id', { mode: 'number' }).notNull(),
   instructorName: varchar('instructor_name', { length: 120 }).notNull(),
   term: varchar('term', { length: 32 }),
@@ -122,7 +133,7 @@ export const questions = pgTable('questions', {
 });
 
 export const auditLogs = pgTable('audit_logs', {
-  id: bigint('id', { mode: 'number' }).primaryKey(),
+  id: bigint('id', { mode: 'number' }).primaryKey().generatedByDefaultAsIdentity(),
   actorId: text('actor_id'),
   action: varchar('action', { length: 64 }).notNull(),
   targetType: varchar('target_type', { length: 32 }),
@@ -130,3 +141,6 @@ export const auditLogs = pgTable('audit_logs', {
   metadata: text('metadata'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
+
+export type { ExamType } from '@/lib/exams';
+export { EXAM_TYPES, EXAM_TYPE_LABELS } from '@/lib/exams';

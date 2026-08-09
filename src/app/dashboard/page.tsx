@@ -1,72 +1,126 @@
 import Link from 'next/link';
-import { getDashboardData } from '@/lib/data';
+import { redirect } from 'next/navigation';
+import { PageHeader, styles } from '@/components/ui';
+import { requirePageUser } from '@/lib/guards';
+import { getAdminDashboard, getLatestClaimForUser, getStudentDashboard } from '@/lib/data';
+import { db } from '@/db';
 
 export default async function DashboardPage() {
-  const { student, results, questions, claims } = await getDashboardData();
+  const user = await requirePageUser();
+
+  if (!db) {
+    return (
+      <main style={styles.page}>
+        <PageHeader title="Dashboard" subtitle="Database is not configured." />
+      </main>
+    );
+  }
+
+  if (user.role === 'admin') {
+    const stats = await getAdminDashboard();
+    const links = [
+      { href: '/admin/claims', label: 'Review claims', detail: `${stats.pendingClaims} pending` },
+      { href: '/admin/roster', label: 'Manage roster', detail: `${stats.studentCount} students` },
+      { href: '/admin/courses', label: 'Courses & exams', detail: `${stats.courseCount} courses` },
+      { href: '/admin/results', label: 'Enter results', detail: 'Component marks' },
+      { href: '/admin/questions', label: 'Question bank', detail: `${stats.questionCount} entries` },
+    ];
+
+    return (
+      <main style={styles.page}>
+        <PageHeader
+          eyebrow="Admin"
+          title={`Welcome, ${user.name}`}
+          subtitle="Pending claims are usually the highest-priority action."
+        />
+        <section style={styles.grid}>
+          <article style={{ ...styles.card, borderLeft: '4px solid #2563eb' }}>
+            <p style={{ margin: 0, color: '#64748b' }}>Pending claims</p>
+            <h2 style={{ margin: '0.35rem 0 0', fontSize: '2rem' }}>{stats.pendingClaims}</h2>
+          </article>
+          <article style={styles.card}>
+            <p style={{ margin: 0, color: '#64748b' }}>Roster size</p>
+            <h2 style={{ margin: '0.35rem 0 0', fontSize: '2rem' }}>{stats.studentCount}</h2>
+          </article>
+          <article style={styles.card}>
+            <p style={{ margin: 0, color: '#64748b' }}>Courses</p>
+            <h2 style={{ margin: '0.35rem 0 0', fontSize: '2rem' }}>{stats.courseCount}</h2>
+          </article>
+        </section>
+        <section style={{ ...styles.grid, marginTop: '1rem' }}>
+          {links.map((link) => (
+            <Link key={link.href} href={link.href} style={{ ...styles.card, textDecoration: 'none', color: 'inherit' }}>
+              <p style={{ margin: 0, fontWeight: 700 }}>{link.label}</p>
+              <p style={{ ...styles.muted, margin: '0.35rem 0 0' }}>{link.detail}</p>
+            </Link>
+          ))}
+        </section>
+      </main>
+    );
+  }
+
+  if (!user.studentId) {
+    const claim = await getLatestClaimForUser(user.id);
+    if (!claim || claim.status !== 'approved') {
+      redirect('/claim');
+    }
+  }
+
+  const data = await getStudentDashboard(user.studentId!);
+  const links = [
+    { href: '/results', label: 'Current-term results' },
+    { href: '/history', label: 'Full mark history' },
+    { href: '/questions', label: 'Question bank' },
+  ];
 
   return (
-    <main style={{ maxWidth: 1100, margin: '0 auto', padding: '2rem 1.25rem', fontFamily: 'Arial, sans-serif' }}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
-        <div>
-          <p style={{ margin: 0, color: '#2563eb', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.2em' }}>Dashboard</p>
-          <h1 style={{ margin: '0.3rem 0 0', fontSize: '1.8rem' }}>Welcome back{student ? `, ${student.name}` : ''}</h1>
-        </div>
-        <Link href="/" style={{ color: '#2563eb', textDecoration: 'none', fontWeight: 600 }}>Back to home</Link>
-      </header>
+    <main style={styles.page}>
+      <PageHeader
+        eyebrow="Dashboard"
+        title={`Welcome back, ${data.student?.name ?? user.name}`}
+        subtitle={data.student ? `${data.student.regNumber} · ${data.student.section}` : undefined}
+      />
 
-      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-        <article style={{ padding: '1rem', background: '#fff', borderRadius: 12, boxShadow: '0 8px 20px rgba(15,23,42,0.06)' }}>
-          <p style={{ margin: 0, color: '#64748b' }}>Reg number</p>
-          <h2 style={{ margin: '0.3rem 0 0' }}>{student?.regNumber ?? '—'}</h2>
-        </article>
-        <article style={{ padding: '1rem', background: '#fff', borderRadius: 12, boxShadow: '0 8px 20px rgba(15,23,42,0.06)' }}>
+      <section style={{ ...styles.grid, marginBottom: '1rem' }}>
+        <article style={styles.card}>
           <p style={{ margin: 0, color: '#64748b' }}>Section</p>
-          <h2 style={{ margin: '0.3rem 0 0' }}>{student?.section ?? '—'}</h2>
+          <h2 style={{ margin: '0.35rem 0 0' }}>{data.student?.section ?? '—'}</h2>
         </article>
-        <article style={{ padding: '1rem', background: '#fff', borderRadius: 12, boxShadow: '0 8px 20px rgba(15,23,42,0.06)' }}>
-          <p style={{ margin: 0, color: '#64748b' }}>Student record</p>
-          <h2 style={{ margin: '0.3rem 0 0' }}>{student ? 'Ready' : 'Pending'}</h2>
+        <article style={{ ...styles.card, borderLeft: '4px solid #2563eb' }}>
+          <p style={{ margin: 0, color: '#64748b' }}>CGPA</p>
+          <h2 style={{ margin: '0.35rem 0 0' }}>{data.cgpa ?? '—'}</h2>
+          <p style={{ ...styles.muted, margin: '0.35rem 0 0', fontSize: 13 }}>Fully-graded courses only</p>
         </article>
-      </section>
-
-      <section style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '1rem' }}>
-        <article style={{ padding: '1rem', background: '#fff', borderRadius: 12, boxShadow: '0 8px 20px rgba(15,23,42,0.06)' }}>
-          <h3 style={{ marginTop: 0 }}>Recent results</h3>
-          {results.length === 0 ? <p>No results available yet.</p> : (
-            <ul style={{ paddingLeft: '1.1rem', lineHeight: 1.8 }}>
-              {results.map((row, index) => (
-                <li key={`${row.course ?? 'course'}-${row.term}-${index}`}>
-                  <strong>{row.course ?? 'Untitled course'}</strong> — {row.term} · {row.total} · {row.grade}
-                </li>
-              ))}
-            </ul>
-          )}
-        </article>
-
-        <article style={{ padding: '1rem', background: '#fff', borderRadius: 12, boxShadow: '0 8px 20px rgba(15,23,42,0.06)' }}>
-          <h3 style={{ marginTop: 0 }}>Pending claims</h3>
-          {claims.length === 0 ? <p>No pending claims.</p> : (
-            <ul style={{ paddingLeft: '1.1rem', lineHeight: 1.8 }}>
-              {claims.map((claim, index) => (
-                <li key={`${claim.email ?? 'claim'}-${index}`}>{claim.email ?? 'Unknown'} — {claim.regNumber ?? '—'} ({claim.status})</li>
-              ))}
-            </ul>
-          )}
+        <article style={styles.card}>
+          <p style={{ margin: 0, color: '#64748b' }}>Graded courses</p>
+          <h2 style={{ margin: '0.35rem 0 0' }}>{data.history.length}</h2>
         </article>
       </section>
 
-      <section style={{ marginTop: '1rem', padding: '1rem', background: '#fff', borderRadius: 12, boxShadow: '0 8px 20px rgba(15,23,42,0.06)' }}>
-        <h3 style={{ marginTop: 0 }}>Question bank</h3>
-        {questions.length === 0 ? <p>No questions available yet.</p> : (
-          <ul style={{ paddingLeft: '1.1rem', lineHeight: 1.8 }}>
-            {questions.map((entry, index) => (
-              <li key={`${entry.course ?? 'question'}-${index}`}>
-                <strong>{entry.course ?? 'Untitled course'}</strong> — {entry.instructor} · {entry.term ?? '—'}
-                <div style={{ color: '#475569', marginTop: '0.2rem' }}>{entry.body ?? 'No description provided.'}</div>
+      <section style={{ ...styles.grid, marginBottom: '1.25rem' }}>
+        {links.map((link) => (
+          <Link key={link.href} href={link.href} style={{ ...styles.card, textDecoration: 'none', color: 'inherit' }}>
+            <p style={{ margin: 0, fontWeight: 700 }}>{link.label}</p>
+          </Link>
+        ))}
+      </section>
+
+      <section style={styles.card}>
+        <h3 style={{ marginTop: 0 }}>Recent finalized results</h3>
+        {data.history.length === 0 ? (
+          <p style={styles.muted}>No finalized results yet — check back once every component is entered.</p>
+        ) : (
+          <ul style={{ paddingLeft: '1.1rem', lineHeight: 1.8, margin: 0 }}>
+            {data.history.slice(0, 5).map((row) => (
+              <li key={`${row.courseId}-${row.term}`}>
+                <strong>{row.courseCode}</strong> — {row.term} · {row.total} · {row.grade}
               </li>
             ))}
           </ul>
         )}
+        <Link href="/history" style={{ display: 'inline-block', marginTop: '0.75rem', color: '#2563eb' }}>
+          View full mark history
+        </Link>
       </section>
     </main>
   );

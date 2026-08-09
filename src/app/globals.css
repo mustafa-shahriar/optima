@@ -3,8 +3,17 @@ html, body {
   padding: 0;
   background: #f8fafc;
   color: #0f172a;
+  font-family: Georgia, "Times New Roman", serif;
 }
 
 a {
   color: inherit;
+}
+
+button, input, select, textarea {
+  font: inherit;
+}
+
+* {
+  box-sizing: border-box;
 }

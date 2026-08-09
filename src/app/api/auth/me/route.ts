@@ -1,12 +1,22 @@
-import { NextResponse } from 'next/server';
-import { getSessionUser } from '@/lib/session';
+import { jsonError, jsonOk, requireUser, isErrorResponse, requireDb } from '@/lib/api';
+import { getLatestClaimForUser, getStudentById } from '@/lib/data';
 
 export async function GET() {
-  const user = await getSessionUser();
+  const userOrErr = await requireUser();
+  if (isErrorResponse(userOrErr)) return userOrErr;
 
-  if (!user) {
-    return NextResponse.json({ ok: false, message: 'Unauthenticated' }, { status: 401 });
-  }
+  const dbOrErr = requireDb();
+  if (isErrorResponse(dbOrErr)) return dbOrErr;
 
-  return NextResponse.json({ ok: true, data: user });
+  const claim = userOrErr.studentId ? null : await getLatestClaimForUser(userOrErr.id);
+  const student = userOrErr.studentId ? await getStudentById(userOrErr.studentId) : null;
+
+  return jsonOk({
+    ...userOrErr,
+    student,
+    claimStatus: userOrErr.studentId
+      ? 'approved'
+      : claim?.status ?? 'none',
+    latestClaim: claim,
+  });
 }

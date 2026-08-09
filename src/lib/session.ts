@@ -7,6 +7,7 @@ export interface SessionUser {
   name: string;
   image?: string | null;
   role: 'student' | 'admin';
+  studentId: number | null;
 }
 
 export async function getSessionUser(): Promise<SessionUser | null> {
@@ -18,11 +19,21 @@ export async function getSessionUser(): Promise<SessionUser | null> {
     return null;
   }
 
+  const u = session.user as {
+    id: string;
+    email: string;
+    name: string;
+    image?: string | null;
+    role?: string;
+    studentId?: number | null;
+  };
+
   return {
-    id: session.user.id,
-    email: session.user.email,
-    name: session.user.name,
-    image: session.user.image,
-    role: (session.user as any).role ?? 'student',
+    id: u.id,
+    email: u.email,
+    name: u.name,
+    image: u.image,
+    role: (u.role as 'student' | 'admin') ?? 'student',
+    studentId: u.studentId ?? null,
   };
 }

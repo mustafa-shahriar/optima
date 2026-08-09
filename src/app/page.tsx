@@ -1,42 +1,32 @@
 import Link from 'next/link';
-import { getStudentProfile } from '@/lib/data';
 
-export default async function HomePage() {
-  const student = await getStudentProfile();
-
+export default function HomePage() {
   return (
-    <main style={{ maxWidth: 960, margin: '0 auto', padding: '3rem 1.5rem', fontFamily: 'Arial, sans-serif' }}>
-      <section style={{ display: 'grid', gap: '1rem', background: '#f8fafc', padding: '2rem', borderRadius: 16 }}>
-        <p style={{ margin: 0, textTransform: 'uppercase', letterSpacing: '0.2em', color: '#2563eb', fontWeight: 700 }}>Optima</p>
-        <h1 style={{ margin: 0, fontSize: '2rem' }}>Result And More student portal</h1>
-        <p style={{ margin: 0, lineHeight: 1.6, color: '#334155' }}>
-          A complete student portal experience for results, CGPA, claim review, and question bank access, built with Next.js and PostgreSQL-ready Drizzle ORM.
+    <main style={{ minHeight: 'calc(100vh - 65px)', background: 'linear-gradient(165deg, #eff6ff 0%, #f8fafc 45%, #ecfeff 100%)' }}>
+      <section style={{ maxWidth: 960, margin: '0 auto', padding: '4.5rem 1.5rem 3rem', fontFamily: 'Georgia, "Times New Roman", serif' }}>
+        <p style={{ margin: 0, textTransform: 'uppercase', letterSpacing: '0.22em', color: '#2563eb', fontWeight: 700, fontSize: 13 }}>
+          Optima
         </p>
-        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-          <Link href="/dashboard" style={{ background: '#2563eb', color: 'white', padding: '0.75rem 1rem', borderRadius: 8, textDecoration: 'none' }}>
-            Open dashboard
+        <h1 style={{ margin: '0.75rem 0 0', fontSize: 'clamp(2.2rem, 5vw, 3.4rem)', lineHeight: 1.1 }}>
+          Result And More
+        </h1>
+        <p style={{ margin: '1rem 0 0', maxWidth: 540, lineHeight: 1.7, color: '#334155', fontSize: '1.1rem' }}>
+          Check component-level results, track CGPA, and browse past questions — after you claim your roster record.
+        </p>
+        <div style={{ display: 'flex', gap: '0.85rem', flexWrap: 'wrap', marginTop: '1.75rem' }}>
+          <Link
+            href="/auth/login"
+            style={{ background: '#2563eb', color: 'white', padding: '0.85rem 1.2rem', borderRadius: 8, textDecoration: 'none', fontWeight: 600 }}
+          >
+            Sign in with Google
           </Link>
-          <Link href="/results" style={{ border: '1px solid #cbd5e1', color: '#0f172a', padding: '0.75rem 1rem', borderRadius: 8, textDecoration: 'none' }}>
-            View results
-          </Link>
-          <Link href="/questions" style={{ border: '1px solid #cbd5e1', color: '#0f172a', padding: '0.75rem 1rem', borderRadius: 8, textDecoration: 'none' }}>
-            Browse question bank
-          </Link>
-          <Link href="/api/health" style={{ border: '1px solid #cbd5e1', color: '#0f172a', padding: '0.75rem 1rem', borderRadius: 8, textDecoration: 'none' }}>
-            API health
+          <Link
+            href="/dashboard"
+            style={{ border: '1px solid #cbd5e1', color: '#0f172a', padding: '0.85rem 1.2rem', borderRadius: 8, textDecoration: 'none', fontWeight: 600, background: '#fff' }}
+          >
+            Go to dashboard
           </Link>
         </div>
-      </section>
-
-      <section style={{ marginTop: '2rem', padding: '1rem', background: '#fff', borderRadius: 12, boxShadow: '0 8px 20px rgba(15,23,42,0.06)' }}>
-        <h2 style={{ marginTop: 0 }}>Student snapshot</h2>
-        {student ? (
-          <>
-            <p><strong>{student.name}</strong> · {student.regNumber} · {student.section}</p>
-          </>
-        ) : (
-          <p>No student record is available yet.</p>
-        )}
       </section>
     </main>
   );

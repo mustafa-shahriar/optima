@@ -1,47 +1,71 @@
-import { NextResponse } from 'next/server';
-import { desc, eq } from 'drizzle-orm';
-import { db } from '@/db';
-import { courses, questions } from '@/db/schema';
+import { jsonError, jsonOk, requireAdmin, requireUser, isErrorResponse, requireDb } from '@/lib/api';
+import { createQuestion, listInstructors, listQuestions } from '@/lib/data';
 
 export async function GET(request: Request) {
+  const userOrErr = await requireUser();
+  if (isErrorResponse(userOrErr)) return userOrErr;
+
+  const dbOrErr = requireDb();
+  if (isErrorResponse(dbOrErr)) return dbOrErr;
+
+  if (userOrErr.role === 'student' && !userOrErr.studentId) {
+    return jsonError('Claim a roster record before browsing the question bank', 403);
+  }
+
+  const { searchParams } = new URL(request.url);
+  const courseIdParam = searchParams.get('courseId');
+  const instructor = searchParams.get('instructor') ?? undefined;
+  const meta = searchParams.get('meta') === '1';
+
+  if (meta) {
+    const instructors = await listInstructors();
+    return jsonOk({ instructors });
+  }
+
+  const courseId = courseIdParam ? Number(courseIdParam) : undefined;
+  if (courseIdParam && !Number.isInteger(courseId)) {
+    return jsonError('courseId must be an integer');
+  }
+
+  const data = await listQuestions({ courseId, instructor });
+  return jsonOk(data);
+}
+
+export async function POST(request: Request) {
+  const adminOrErr = await requireAdmin();
+  if (isErrorResponse(adminOrErr)) return adminOrErr;
+
+  const dbOrErr = requireDb();
+  if (isErrorResponse(dbOrErr)) return dbOrErr;
+
+  let body: {
+    courseId?: number;
+    instructorName?: string;
+    term?: string;
+    questionText?: string;
+    fileUrl?: string;
+  };
   try {
-    if (!db) {
-      return NextResponse.json({ ok: false, message: 'Database not configured' }, { status: 500 });
-    }
+    body = await request.json();
+  } catch {
+    return jsonError('Invalid JSON body');
+  }
 
-    const { searchParams } = new URL(request.url);
-    const courseId = searchParams.get('courseId');
-    const instructor = searchParams.get('instructor');
+  if (!body.courseId || !body.instructorName?.trim()) {
+    return jsonError('courseId and instructorName are required');
+  }
 
-    let query = db
-      .select({
-        id: questions.id,
-        courseId: questions.courseId,
-        instructorName: questions.instructorName,
-        term: questions.term,
-        questionText: questions.questionText,
-        fileUrl: questions.fileUrl,
-        createdAt: questions.createdAt,
-        courseName: courses.name,
-      })
-      .from(questions)
-      .leftJoin(courses, eq(questions.courseId, courses.id));
-
-    if (courseId) {
-      const parsedCourseId = Number(courseId);
-      if (!Number.isInteger(parsedCourseId)) {
-        return NextResponse.json({ ok: false, message: 'courseId must be an integer' }, { status: 400 });
-      }
-      query = query.where(eq(questions.courseId, parsedCourseId)) as typeof query;
-    }
-
-    if (instructor) {
-      query = query.where(eq(questions.instructorName, instructor)) as typeof query;
-    }
-
-    const rows = await query.orderBy(desc(questions.createdAt));
-    return NextResponse.json({ ok: true, data: rows });
+  try {
+    const question = await createQuestion({
+      courseId: Number(body.courseId),
+      instructorName: body.instructorName,
+      term: body.term,
+      questionText: body.questionText,
+      fileUrl: body.fileUrl,
+      uploadedBy: adminOrErr.id,
+    });
+    return jsonOk(question, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ ok: false, message: 'Unable to fetch questions', error: error instanceof Error ? error.message : 'unknown error' }, { status: 500 });
+    return jsonError(error instanceof Error ? error.message : 'Unable to create question', 400);
   }
 }

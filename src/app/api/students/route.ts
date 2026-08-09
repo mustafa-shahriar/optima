@@ -1,22 +1,55 @@
-import { NextResponse } from 'next/server';
-import { db } from '@/db';
-import { students } from '@/db/schema';
+import { jsonError, jsonOk, requireAdmin, requireUser, isErrorResponse, requireDb } from '@/lib/api';
+import { createStudent, listStudents, writeAuditLog } from '@/lib/data';
 
 export async function GET() {
+  const userOrErr = await requireUser();
+  if (isErrorResponse(userOrErr)) return userOrErr;
+
+  const dbOrErr = requireDb();
+  if (isErrorResponse(dbOrErr)) return dbOrErr;
+
+  // Students may look up roster only by reg number via claims; listing is admin.
+  if (userOrErr.role !== 'admin') {
+    return jsonError('Admin access required', 403);
+  }
+
+  const data = await listStudents();
+  return jsonOk(data);
+}
+
+export async function POST(request: Request) {
+  const adminOrErr = await requireAdmin();
+  if (isErrorResponse(adminOrErr)) return adminOrErr;
+
+  const dbOrErr = requireDb();
+  if (isErrorResponse(dbOrErr)) return dbOrErr;
+
+  let body: { regNumber?: string; name?: string; section?: string };
   try {
-    if (!db) {
-      return NextResponse.json({ ok: false, message: 'Database not configured' }, { status: 500 });
-    }
+    body = await request.json();
+  } catch {
+    return jsonError('Invalid JSON body');
+  }
 
-    const rows = await db.select({
-      id: students.id,
-      regNumber: students.regNumber,
-      name: students.name,
-      section: students.section,
-    }).from(students).limit(10);
+  if (!body.regNumber?.trim() || !body.name?.trim() || !body.section?.trim()) {
+    return jsonError('regNumber, name, and section are required');
+  }
 
-    return NextResponse.json(rows);
+  try {
+    const student = await createStudent({
+      regNumber: body.regNumber,
+      name: body.name,
+      section: body.section,
+    });
+    await writeAuditLog({
+      actorId: adminOrErr.id,
+      action: 'roster_created',
+      targetType: 'student',
+      targetId: student.id,
+      metadata: { regNumber: student.regNumber },
+    });
+    return jsonOk(student, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ ok: false, message: 'Unable to fetch students', error: error instanceof Error ? error.message : 'unknown error' }, { status: 500 });
+    return jsonError(error instanceof Error ? error.message : 'Unable to create student', 400);
   }
 }
