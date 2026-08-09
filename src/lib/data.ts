@@ -1,6 +1,6 @@
 import { desc, eq, sql } from 'drizzle-orm';
 import { db } from '@/db';
-import { claimRequests, courses, questions, resultComponents, students, users } from '@/db/schema';
+import { claimRequests, courses, questions, resultComponents, students, user } from '@/db/schema';
 
 export interface StudentSummary {
   id: number;
@@ -112,12 +112,12 @@ export async function getClaims(): Promise<ClaimItem[]> {
   try {
     return await db
       .select({
-        email: users.email,
+        email: user.email,
         regNumber: students.regNumber,
         status: claimRequests.status,
       })
       .from(claimRequests)
-      .leftJoin(users, eq(claimRequests.userId, users.id))
+      .leftJoin(user, eq(claimRequests.userId, user.id))
       .leftJoin(students, eq(claimRequests.studentId, students.id))
       .orderBy(desc(claimRequests.requestedAt));
   } catch {

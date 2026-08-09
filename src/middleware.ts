@@ -1,18 +1,26 @@
-import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
-const isPublicRoute = createRouteMatcher(['/', '/auth/login(.*)', '/auth/register(.*)', '/auth/logout(.*)']);
-const isProtectedRoute = createRouteMatcher(['/dashboard(.*)', '/results(.*)', '/questions(.*)', '/claims(.*)', '/api(.*)']);
+const protectedPaths = ['/dashboard', '/results', '/questions', '/claims'];
 
-export default clerkMiddleware(async (auth, request) => {
-  if (isPublicRoute(request)) {
-    return;
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  const isProtected = protectedPaths.some((p) => pathname.startsWith(p));
+  if (!isProtected) {
+    return NextResponse.next();
   }
 
-  if (isProtectedRoute(request)) {
-    await auth.protect();
+  const sessionToken = request.cookies.get('better-auth.session_token');
+  if (!sessionToken) {
+    const loginUrl = new URL('/auth/login', request.url);
+    loginUrl.searchParams.set('callbackUrl', pathname);
+    return NextResponse.redirect(loginUrl);
   }
-});
+
+  return NextResponse.next();
+}
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/auth).*)'],
 };

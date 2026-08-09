@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { desc, eq } from 'drizzle-orm';
 import { db } from '@/db';
-import { claimRequests, students, users } from '@/db/schema';
+import { claimRequests, students, user } from '@/db/schema';
 
 export async function GET(request: Request) {
   try {
@@ -12,30 +12,35 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
 
-    let query = db
-      .select({
-        id: claimRequests.id,
-        userId: claimRequests.userId,
-        studentId: claimRequests.studentId,
-        status: claimRequests.status,
-        requestedAt: claimRequests.requestedAt,
-        rejectionReason: claimRequests.rejectionReason,
-        email: users.email,
-        regNumber: students.regNumber,
-      })
+    const baseQuery = db
+      .select()
       .from(claimRequests)
-      .leftJoin(users, eq(claimRequests.userId, users.id))
+      .leftJoin(user, eq(claimRequests.userId, user.id))
       .leftJoin(students, eq(claimRequests.studentId, students.id));
+
+    let query = baseQuery;
 
     if (status) {
       if (!['pending', 'approved', 'rejected'].includes(status)) {
         return NextResponse.json({ ok: false, message: 'status must be pending, approved, or rejected' }, { status: 400 });
       }
-      query = query.where(eq(claimRequests.status, status)) as typeof query;
+      query = baseQuery.where(eq(claimRequests.status, status));
     }
 
     const rows = await query.orderBy(desc(claimRequests.requestedAt));
-    return NextResponse.json({ ok: true, data: rows });
+
+    const data = rows.map((row) => ({
+      id: row.claim_requests.id,
+      userId: row.claim_requests.userId,
+      studentId: row.claim_requests.studentId,
+      status: row.claim_requests.status,
+      requestedAt: row.claim_requests.requestedAt,
+      rejectionReason: row.claim_requests.rejectionReason,
+      email: row.user?.email ?? null,
+      regNumber: row.students?.regNumber ?? null,
+    }));
+
+    return NextResponse.json({ ok: true, data });
   } catch (error) {
     return NextResponse.json({ ok: false, message: 'Unable to fetch claims', error: error instanceof Error ? error.message : 'unknown error' }, { status: 500 });
   }
