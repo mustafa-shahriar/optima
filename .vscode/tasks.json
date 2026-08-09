@@ -1,0 +1,343 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "install-deps",
+			"type": "shell",
+			"command": "npm install",
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "dev-server",
+			"type": "shell",
+			"command": "npm run dev",
+			"options": {
+				"cwd": "${workspaceFolder}"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "install-deps",
+			"type": "shell",
+			"command": "npm install",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "start-db",
+			"type": "shell",
+			"command": "docker compose up -d",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "check-docker",
+			"type": "shell",
+			"command": "docker --version && (docker compose version || docker-compose --version)",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "start-postgres",
+			"type": "shell",
+			"command": "docker run -d --name optima-postgres -e POSTGRES_DB=optima -e POSTGRES_USER=optima -e POSTGRES_PASSWORD=optima123 -p 5432:5432 postgres:16-alpine",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "build-app",
+			"type": "shell",
+			"command": "npm run build",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "build-app",
+			"type": "shell",
+			"command": "npm run build",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "fix-css-path",
+			"type": "shell",
+			"command": "rm -rf src/app/globals.css && printf '%s\n' 'html, body {' '  margin: 0;' '  padding: 0;' '  background: #f8fafc;' '  color: #0f172a;' '}' '' 'a {' '  color: inherit;' '}' > src/app/globals.css",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "build-app",
+			"type": "shell",
+			"command": "npm run build",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "build-app",
+			"type": "shell",
+			"command": "npm run build",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "check-docker-system",
+			"type": "shell",
+			"command": "docker version && docker ps",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "build-app",
+			"type": "shell",
+			"command": "npm run build",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "build-app",
+			"type": "shell",
+			"command": "npm run build",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "check-postgres-host",
+			"type": "shell",
+			"command": "(psql --version || true) && echo '---' && (pg_isready -h localhost -p 5432 || true) && echo '---' && (which psql || true)",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "check-system-packaging",
+			"type": "shell",
+			"command": "whoami && echo '---' && (sudo -n true >/dev/null 2>&1 && echo SUDO_OK || echo NO_SUDO) && echo '---' && (command -v apt-get || true) && echo '---' && (command -v apk || true) && echo '---' && (command -v yum || true)",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "upgrade-deps",
+			"type": "shell",
+			"command": "npm install",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "build-app",
+			"type": "shell",
+			"command": "npm run build",
+			"args": [],
+			"isBackground": false,
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "build-app",
+			"type": "shell",
+			"command": "npm run build",
+			"args": [],
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "build-app",
+			"type": "shell",
+			"command": "npm run build",
+			"args": [],
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "build-app",
+			"type": "shell",
+			"command": "npm run build",
+			"args": [],
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "build-app",
+			"type": "shell",
+			"command": "npm run build",
+			"args": [],
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "build-app",
+			"type": "shell",
+			"command": "npm run build",
+			"args": [],
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "build-app",
+			"type": "shell",
+			"command": "npm run build",
+			"args": [],
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "install-clerk",
+			"type": "shell",
+			"command": "npm install",
+			"args": [],
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "install-deps",
+			"type": "shell",
+			"command": "npm install --legacy-peer-deps",
+			"args": [],
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "build-app",
+			"type": "shell",
+			"command": "npm run build",
+			"args": [],
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "dev-server",
+			"type": "shell",
+			"command": "npm run dev -- --hostname 127.0.0.1",
+			"args": [],
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "build-app",
+			"type": "shell",
+			"command": "npm run build",
+			"args": [],
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "build-app",
+			"type": "shell",
+			"command": "npm run build",
+			"args": [],
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "check-dashboard",
+			"type": "shell",
+			"command": "curl -i http://127.0.0.1:3001/dashboard | sed -n '1,80p'",
+			"args": [],
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "move-auth-pages",
+			"type": "shell",
+			"command": "mkdir -p src/app/auth/login/[[...rest]] src/app/auth/register/[[...rest]] && mv src/app/auth/login/page.tsx src/app/auth/login/[[...rest]]/page.tsx && mv src/app/auth/register/page.tsx src/app/auth/register/[[...rest]]/page.tsx",
+			"args": [],
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "curl-dashboard",
+			"type": "shell",
+			"command": "cd /home/mustafa/trunk/optima && curl -i --max-time 10 http://127.0.0.1:3001/dashboard",
+			"args": [],
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "fetch-dashboard",
+			"type": "shell",
+			"command": "cd /home/mustafa/trunk/optima && curl -i --max-time 10 http://127.0.0.1:3001/dashboard | cat",
+			"args": [],
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "inspect-process",
+			"type": "shell",
+			"command": "cd /home/mustafa/trunk/optima && ps -ef | grep '[n]ext'",
+			"args": [],
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "create-catchall-auth-pages",
+			"type": "shell",
+			"command": "cd /home/mustafa/trunk/optima && mkdir -p 'src/app/auth/login/[[...rest]]' 'src/app/auth/register/[[...rest]]' && mv src/app/auth/login/page.tsx src/app/auth/login/[[...rest]]/page.tsx && mv src/app/auth/register/page.tsx src/app/auth/register/[[...rest]]/page.tsx",
+			"args": [],
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "grep-clerk-middleware",
+			"type": "shell",
+			"command": "cd /home/mustafa/trunk/optima && grep -R \"clerkMiddleware\" node_modules/@clerk/nextjs | head -80",
+			"args": [],
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "grep-clerk-signinurl",
+			"type": "shell",
+			"command": "cd /home/mustafa/trunk/optima && grep -R \"signInUrl\" node_modules/@clerk/nextjs/dist/types/server | head -80",
+			"args": [],
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "check-clerk-version",
+			"type": "shell",
+			"command": "cd /home/mustafa/trunk/optima && npm ls @clerk/nextjs",
+			"args": [],
+			"problemMatcher": [],
+			"group": "build"
+		},
+		{
+			"label": "move-auth-catchall",
+			"type": "shell",
+			"command": "cd /home/mustafa/trunk/optima && mkdir -p 'src/app/auth/login/[[...rest]]' 'src/app/auth/register/[[...rest]]' && mv 'src/app/auth/login/page.tsx' 'src/app/auth/login/[[...rest]]/page.tsx' && mv 'src/app/auth/register/page.tsx' 'src/app/auth/register/[[...rest]]/page.tsx'",
+			"args": [],
+			"problemMatcher": [],
+			"group": "build"
+		}
+	]
+}
