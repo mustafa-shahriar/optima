@@ -103,7 +103,7 @@ export default function AdminClaimsPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
                 <div>
                   <h3 style={{ margin: 0 }}>
-                    {group[0].regNumber ?? 'Unknown reg'} — {group[0].studentName ?? 'Roster record'}
+                    {group[0].regNumber ?? 'Unknown reg'} — {group[0].studentName ?? 'Student record'}
                   </h3>
                   {duplicate ? (
                     <p style={{ margin: '0.35rem 0 0', color: '#c2410c', fontWeight: 700, fontSize: 14 }}>

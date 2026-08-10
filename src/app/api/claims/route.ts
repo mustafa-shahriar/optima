@@ -44,7 +44,7 @@ export async function POST(request: Request) {
   }
 
   if (userOrErr.studentId) {
-    return jsonError('Your account is already linked to a roster record', 400);
+    return jsonError('Your account is already linked to a student record', 400);
   }
 
   let body: { regNumber?: string };
@@ -61,7 +61,7 @@ export async function POST(request: Request) {
 
   const student = await getStudentByRegNumber(regNumber);
   if (!student) {
-    return jsonError('No roster record matches that registration number', 404);
+    return jsonError('No student record matches that registration number', 404);
   }
 
   try {

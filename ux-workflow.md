@@ -75,11 +75,11 @@ Scope: v1, ~60 students / 4 admins, responsive web only. Built off the SRS
 
 ### 2.1 Admin dashboard
 - Landing view: count of pending claims (the thing that needs action most
-  often), quick links to roster, courses, results, question bank.
+  often), quick links to student records, courses, results, question bank.
 
-### 2.2 Roster management
+### 2.2 Student records management
 - List of `students` rows — reg number, name, section.
-- Add/edit a record. Deleting a roster record that's already claimed needs a
+- Add/edit a record. Deleting a student record that's already claimed needs a
   confirmation step (it orphans a user's link).
 
 ### 2.3 Claim review queue
@@ -102,7 +102,7 @@ Scope: v1, ~60 students / 4 admins, responsive web only. Built off the SRS
   the database intentionally isn't.
 
 ### 2.5 Result entry
-- Pick a course + term → see the roster for that course/section as rows,
+- Pick a course + term → see student records for that course/section as rows,
   columns for each `exam` type.
 - Enter marks per student per component — this is FR12, the structured
   entry form replacing PDF parsing.
@@ -144,7 +144,7 @@ rather than discovering later:
 — all but Dashboard and Profile stay visibly disabled until a claim is
 approved, rather than being hidden entirely.
 
-**Admin nav:** Dashboard · Roster · Claims (badge with pending count) ·
+**Admin nav:** Dashboard · Student Records · Claims (badge with pending count) ·
 Courses · Results · Question Bank
 — separate from the student nav entirely; an admin who's also a student
 (if that's ever a real case) would need role-switching, which isn't in

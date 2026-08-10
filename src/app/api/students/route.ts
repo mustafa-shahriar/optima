@@ -8,7 +8,7 @@ export async function GET() {
   const dbOrErr = requireDb();
   if (isErrorResponse(dbOrErr)) return dbOrErr;
 
-  // Students may look up roster only by reg number via claims; listing is admin.
+  // Students may look up student records only by reg number via claims; listing is admin.
   if (userOrErr.role !== 'admin') {
     return jsonError('Admin access required', 403);
   }

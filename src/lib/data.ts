@@ -119,7 +119,7 @@ export async function writeAuditLog(input: {
   });
 }
 
-/* ── Students / roster ─────────────────────────────────── */
+/* ── Students / student records ─────────────────────── */
 
 export async function listStudents(): Promise<StudentSummary[]> {
   const database = requireDatabase();
@@ -351,7 +351,7 @@ export async function decideClaim(input: {
       .where(eq(user.studentId, claim.studentId))
       .limit(1);
     if (alreadyLinked[0]) {
-      throw new Error('That roster record is already linked to another account');
+      throw new Error('That student record is already linked to another account');
     }
 
     await database

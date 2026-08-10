@@ -77,7 +77,7 @@ export async function DELETE(request: Request, { params }: Params) {
 
   if (claimed && !confirm) {
     return jsonError(
-      'This roster record is linked to a user account. Pass confirm=1 to delete and orphan the link.',
+      'This student record is linked to a user account. Pass confirm=1 to delete and orphan the link.',
       409,
       { claimed: true },
     );

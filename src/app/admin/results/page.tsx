@@ -141,7 +141,7 @@ export default function AdminResultsPage() {
           <input style={styles.input} value={term} onChange={(e) => setTerm(e.target.value)} placeholder="2026-Spring" required />
         </label>
         <div style={{ display: 'flex', alignItems: 'end' }}>
-          <button type="submit" style={styles.button}>Load roster grid</button>
+          <button type="submit" style={styles.button}>Load student grid</button>
         </div>
       </form>
 

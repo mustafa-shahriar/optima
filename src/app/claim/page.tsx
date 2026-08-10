@@ -96,7 +96,7 @@ export default function ClaimPage() {
       <main style={styles.page}>
         <PageHeader
           eyebrow="Claim"
-          title="Roster linked"
+          title="Student record linked"
           subtitle="Your account is connected to a student record. Results and CGPA are unlocked."
         />
         <div style={styles.card}>
@@ -119,7 +119,7 @@ export default function ClaimPage() {
     <main style={styles.page}>
       <PageHeader
         eyebrow="Claim"
-        title="Claim your roster record"
+        title="Claim your student record"
         subtitle="Enter the registration number that matches your official student record. An admin must approve before results unlock."
       />
 

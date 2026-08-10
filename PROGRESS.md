@@ -27,7 +27,7 @@ Ship the Result And More portal (v1) against:
 - Unclaimed students hitting `/dashboard` redirect to `/claim`
 
 ### Data layer (`src/lib/data.ts`)
-- Roster CRUD + claimed-delete awareness
+- Student Records CRUD + claimed-delete awareness
 - Claim create / list / approve / reject + audit logs
 - Auto-reject other pending claims for same reg on approve
 - Courses + exam weight replace
@@ -43,7 +43,7 @@ Ship the Result And More portal (v1) against:
 | `/api/auth/me` | GET | Session + claim status |
 | `/api/claims` | GET, POST | Admin list / student mine+submit |
 | `/api/claims/[id]` | GET, PATCH | Approve/reject |
-| `/api/students` | GET, POST | Admin roster |
+| `/api/students` | GET, POST | Admin student records |
 | `/api/students/[id]` | GET, PATCH, DELETE | `?confirm=1` if claimed |
 | `/api/courses` | GET, POST | |
 | `/api/courses/[id]` | GET, PATCH, DELETE | Includes exams on GET |
@@ -72,13 +72,13 @@ Ship the Result And More portal (v1) against:
 | `/admin/roster` | Add/edit/delete with claimed confirm |
 | `/admin/claims` | Queue + duplicate-reg grouping |
 | `/admin/courses` | Create course + exam weights UI |
-| `/admin/results` | Roster×exam grid, partial save, PDF URL ref |
+| `/admin/results` | Student records×exam grid, partial save, PDF URL ref |
 | `/admin/questions` | Text and/or file URL entries |
 
 ### Nav
 - Student: Dashboard · My Results · Mark History · Question Bank · Claim  
   (Results / History / Questions **visibly disabled** until claimed)
-- Admin: Dashboard · Roster · Claims (badge) · Courses · Results · Question Bank
+- Admin: Dashboard · Student Records · Claims (badge) · Courses · Results · Question Bank
 - Shared shell: `src/app/HeaderShell.tsx`
 
 ### Tooling

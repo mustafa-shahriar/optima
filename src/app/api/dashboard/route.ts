@@ -14,7 +14,7 @@ export async function GET() {
   }
 
   if (!userOrErr.studentId) {
-    return jsonError('Claim a roster record before opening the dashboard', 403);
+    return jsonError('Claim a student record before opening the dashboard', 403);
   }
 
   const data = await getStudentDashboard(userOrErr.studentId);

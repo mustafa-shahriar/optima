@@ -91,7 +91,7 @@ export function HeaderShell() {
 
   const adminNav: NavItem[] = [
     { href: '/dashboard', label: 'Dashboard' },
-    { href: '/admin/roster', label: 'Roster' },
+    { href: '/admin/roster', label: 'Student Records' },
     { href: '/admin/claims', label: 'Claims', badge: pendingClaims },
     { href: '/admin/courses', label: 'Courses' },
     { href: '/admin/results', label: 'Results' },

@@ -23,7 +23,7 @@ export async function GET(request: Request) {
     return jsonError('courseId must be an integer');
   }
 
-  // Admin entry grid: roster × exam components for a course/term
+  // Admin entry grid: student records × exam components for a course/term
   if (grid) {
     if (userOrErr.role !== 'admin') return jsonError('Admin access required', 403);
     if (!courseId || !term) return jsonError('courseId and term are required for grid mode');
@@ -44,7 +44,7 @@ export async function GET(request: Request) {
     if (!Number.isInteger(studentId)) return jsonError('studentId must be an integer');
   } else {
     if (!userOrErr.studentId) {
-      return jsonError('Claim a roster record before viewing results', 403);
+      return jsonError('Claim a student record before viewing results', 403);
     }
     studentId = userOrErr.studentId;
   }

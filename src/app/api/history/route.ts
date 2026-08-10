@@ -18,7 +18,7 @@ export async function GET(request: Request) {
     if (!Number.isInteger(studentId)) return jsonError('studentId must be an integer');
   } else {
     if (!userOrErr.studentId) {
-      return jsonError('Claim a roster record before viewing mark history', 403);
+      return jsonError('Claim a student record before viewing mark history', 403);
     }
     studentId = userOrErr.studentId;
   }

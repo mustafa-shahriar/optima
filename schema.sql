@@ -5,7 +5,7 @@
 -- ============================================================
 
 -- ---------------------------------------------------------
--- 1. Roster — admin-managed, source of truth for who's real.
+-- 1. Student Records — admin-managed, source of truth for who's real.
 --    No login info ever lives here (FR1).
 -- ---------------------------------------------------------
 CREATE TABLE students (
@@ -20,7 +20,7 @@ CREATE TABLE students (
 -- ---------------------------------------------------------
 -- 2. OAuth-authenticated accounts.
 --    role is a plain field, not hardcoded logic (per SRS design note).
---    student_id UNIQUE enforces "one account per roster record" (FR7)
+--    student_id UNIQUE enforces "one account per student record" (FR7)
 --    at the DB level, not just app logic.
 -- ---------------------------------------------------------
 CREATE TABLE users (

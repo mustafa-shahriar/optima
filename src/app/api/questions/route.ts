@@ -9,7 +9,7 @@ export async function GET(request: Request) {
   if (isErrorResponse(dbOrErr)) return dbOrErr;
 
   if (userOrErr.role === 'student' && !userOrErr.studentId) {
-    return jsonError('Claim a roster record before browsing the question bank', 403);
+    return jsonError('Claim a student record before browsing the question bank', 403);
   }
 
   const { searchParams } = new URL(request.url);

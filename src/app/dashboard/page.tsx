@@ -20,7 +20,7 @@ export default async function DashboardPage() {
     const stats = await getAdminDashboard();
     const links = [
       { href: '/admin/claims', label: 'Review claims', detail: `${stats.pendingClaims} pending` },
-      { href: '/admin/roster', label: 'Manage roster', detail: `${stats.studentCount} students` },
+      { href: '/admin/roster', label: 'Manage student records', detail: `${stats.studentCount} students` },
       { href: '/admin/courses', label: 'Courses & exams', detail: `${stats.courseCount} courses` },
       { href: '/admin/results', label: 'Enter results', detail: 'Component marks' },
       { href: '/admin/questions', label: 'Question bank', detail: `${stats.questionCount} entries` },
@@ -39,7 +39,7 @@ export default async function DashboardPage() {
             <h2 style={{ margin: '0.35rem 0 0', fontSize: '2rem' }}>{stats.pendingClaims}</h2>
           </article>
           <article style={styles.card}>
-            <p style={{ margin: 0, color: '#64748b' }}>Roster size</p>
+            <p style={{ margin: 0, color: '#64748b' }}>Total students</p>
             <h2 style={{ margin: '0.35rem 0 0', fontSize: '2rem' }}>{stats.studentCount}</h2>
           </article>
           <article style={styles.card}>

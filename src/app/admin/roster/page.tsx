@@ -30,7 +30,7 @@ export default function AdminRosterPage() {
       if (!json.ok) throw new Error(json.message);
       setStudents(json.data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to load roster');
+      setError(err instanceof Error ? err.message : 'Unable to load student records');
     } finally {
       setLoading(false);
     }
@@ -85,7 +85,7 @@ export default function AdminRosterPage() {
 
     const confirmMsg = claimed
       ? `${student.regNumber} is linked to a user account. Delete anyway and orphan that link?`
-      : `Delete ${student.regNumber} from the roster?`;
+      : `Delete ${student.regNumber} from student records?`;
     if (!window.confirm(confirmMsg)) return;
 
     setError(null);
@@ -107,7 +107,7 @@ export default function AdminRosterPage() {
     <main style={styles.page}>
       <PageHeader
         eyebrow="Admin"
-        title="Roster management"
+        title="Student records management"
         subtitle="Registration number, name, and section — the source of truth for claims."
       />
 
@@ -143,7 +143,7 @@ export default function AdminRosterPage() {
       {loading ? <LoadingState /> : null}
 
       {!loading && students.length === 0 ? (
-        <EmptyState title="No students on the roster" body="Add the first registration record to begin claims." />
+        <EmptyState title="No student records found" body="Add the first student record to begin claims." />
       ) : null}
 
       {!loading && students.length > 0 ? (

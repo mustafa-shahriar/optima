@@ -11,7 +11,7 @@ export default function HomePage() {
           Result And More
         </h1>
         <p style={{ margin: '1rem 0 0', maxWidth: 540, lineHeight: 1.7, color: '#334155', fontSize: '1.1rem' }}>
-          Check component-level results, track CGPA, and browse past questions — after you claim your roster record.
+          Check component-level results, track CGPA, and browse past questions — after you claim your student record.
         </p>
         <div style={{ display: 'flex', gap: '0.85rem', flexWrap: 'wrap', marginTop: '1.75rem' }}>
           <Link
