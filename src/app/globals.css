@@ -79,6 +79,70 @@ button, input, select, textarea {
   line-height: 1;
 }
 
+.nav-dropdown {
+  position: relative;
+}
+
+.nav-dropdown-trigger {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+}
+
+.nav-dropdown-chevron {
+  font-size: 0.7rem;
+  line-height: 1;
+  opacity: 0.7;
+}
+
+.nav-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  min-width: 210px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  padding: 0.35rem;
+  z-index: 60;
+}
+
+.nav-dropdown-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 6px;
+  color: #475569;
+  text-decoration: none;
+  font-size: 0.925rem;
+  font-weight: 500;
+}
+
+.nav-dropdown-item:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.nav-dropdown-item.active {
+  background: #eff6ff;
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.nav-mobile-section-label {
+  margin-top: 0.35rem;
+  padding: 0.45rem 0.85rem 0.15rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
 .nav-user-section {
   display: flex;
   align-items: center;

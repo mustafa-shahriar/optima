@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { PageHeader, styles } from '@/components/ui';
 import { requirePageUser } from '@/lib/guards';
-import { getAdminDashboard, getLatestClaimForUser, getStudentDashboard } from '@/lib/data';
+import { getLatestClaimForUser, getStudentDashboard } from '@/lib/data';
 import { db } from '@/db';
 
 export default async function DashboardPage() {
@@ -16,47 +16,8 @@ export default async function DashboardPage() {
     );
   }
 
-  if (user.role === 'admin') {
-    const stats = await getAdminDashboard();
-    const links = [
-      { href: '/admin/claims', label: 'Review claims', detail: `${stats.pendingClaims} pending` },
-      { href: '/admin/roster', label: 'Manage student records', detail: `${stats.studentCount} students` },
-      { href: '/admin/courses', label: 'Courses & exams', detail: `${stats.courseCount} courses` },
-      { href: '/admin/results', label: 'Enter results', detail: 'Component marks' },
-      { href: '/admin/questions', label: 'Question bank', detail: `${stats.questionCount} entries` },
-    ];
-
-    return (
-      <main style={styles.page}>
-        <PageHeader
-          eyebrow="Admin"
-          title={`Welcome, ${user.name}`}
-          subtitle="Pending claims are usually the highest-priority action."
-        />
-        <section style={styles.grid}>
-          <article style={{ ...styles.card, borderLeft: '4px solid #2563eb' }}>
-            <p style={{ margin: 0, color: '#64748b' }}>Pending claims</p>
-            <h2 style={{ margin: '0.35rem 0 0', fontSize: '2rem' }}>{stats.pendingClaims}</h2>
-          </article>
-          <article style={styles.card}>
-            <p style={{ margin: 0, color: '#64748b' }}>Total students</p>
-            <h2 style={{ margin: '0.35rem 0 0', fontSize: '2rem' }}>{stats.studentCount}</h2>
-          </article>
-          <article style={styles.card}>
-            <p style={{ margin: 0, color: '#64748b' }}>Courses</p>
-            <h2 style={{ margin: '0.35rem 0 0', fontSize: '2rem' }}>{stats.courseCount}</h2>
-          </article>
-        </section>
-        <section style={{ ...styles.grid, marginTop: '1rem' }}>
-          {links.map((link) => (
-            <Link key={link.href} href={link.href} style={{ ...styles.card, textDecoration: 'none', color: 'inherit' }}>
-              <p style={{ margin: 0, fontWeight: 700 }}>{link.label}</p>
-              <p style={{ ...styles.muted, margin: '0.35rem 0 0' }}>{link.detail}</p>
-            </Link>
-          ))}
-        </section>
-      </main>
-    );
+  if (user.role === 'admin' && !user.studentId) {
+    redirect('/admin');
   }
 
   if (!user.studentId) {
