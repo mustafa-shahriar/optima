@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { authClient } from '@/lib/auth-client';
 
 import { GoogleButton, Skeleton, Spinner } from '@/components/ui';
@@ -23,6 +23,37 @@ interface NavItem {
   badge?: number;
 }
 
+function buildStudentNav(claimed: boolean, isAdmin = false): NavItem[] {
+  if (claimed) {
+    return [
+      { href: '/dashboard', label: 'Dashboard' },
+      { href: '/results', label: 'My Results' },
+      { href: '/history', label: 'Mark History' },
+      { href: '/questions', label: 'Question Bank' },
+    ];
+  }
+
+  if (isAdmin) {
+    return [{ href: '/claim', label: 'Claim Record' }];
+  }
+
+  return [
+    { href: '/dashboard', label: 'Dashboard' },
+    { href: '/claim', label: 'Claim' },
+  ];
+}
+
+function buildAdminNav(pendingClaims: number): NavItem[] {
+  return [
+    { href: '/admin', label: 'Admin Dashboard' },
+    { href: '/admin/roster', label: 'Student Records' },
+    { href: '/admin/claims', label: 'Claims', badge: pendingClaims },
+    { href: '/admin/courses', label: 'Courses' },
+    { href: '/admin/results', label: 'Results' },
+    { href: '/admin/questions', label: 'Question Bank' },
+  ];
+}
+
 export function HeaderShell() {
   const [me, setMe] = useState<MeData | null>(null);
   const [pendingClaims, setPendingClaims] = useState(0);
@@ -30,6 +61,8 @@ export function HeaderShell() {
   const [signingIn, setSigningIn] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [adminMenuOpen, setAdminMenuOpen] = useState(false);
+  const adminMenuRef = useRef<HTMLDivElement>(null);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -79,10 +112,21 @@ export function HeaderShell() {
     };
   }, []);
 
-  // Automatically close mobile menu on route change
   useEffect(() => {
     setMobileOpen(false);
+    setAdminMenuOpen(false);
   }, [pathname]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (adminMenuRef.current && !adminMenuRef.current.contains(event.target as Node)) {
+        setAdminMenuOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleSignIn = async () => {
     setSigningIn(true);
@@ -104,40 +148,32 @@ export function HeaderShell() {
   };
 
   const claimed = Boolean(me?.studentId);
+  const isAdmin = me?.role === 'admin';
 
-  // Build nav items dynamically based on role and claim status.
-  let nav: NavItem[] = [];
-
-  if (me?.role === 'admin') {
-    nav = [
-      { href: '/dashboard', label: 'Dashboard' },
-      { href: '/admin/roster', label: 'Student Records' },
-      { href: '/admin/claims', label: 'Claims', badge: pendingClaims },
-      { href: '/admin/courses', label: 'Courses' },
-      { href: '/admin/results', label: 'Results' },
-      { href: '/admin/questions', label: 'Question Bank' },
-      { href: '/claim', label: 'Claim Record' },
-    ];
-  } else if (me?.role === 'student') {
-    if (claimed) {
-      nav = [
-        { href: '/dashboard', label: 'Dashboard' },
-        { href: '/results', label: 'My Results' },
-        { href: '/history', label: 'Mark History' },
-        { href: '/questions', label: 'Question Bank' },
-        { href: '/claim', label: 'Claim' },
-      ];
-    } else {
-      nav = [
-        { href: '/dashboard', label: 'Dashboard' },
-        { href: '/claim', label: 'Claim' },
-      ];
-    }
-  }
+  const studentNav = me ? buildStudentNav(claimed, isAdmin) : [];
+  const adminNav = isAdmin ? buildAdminNav(pendingClaims) : [];
 
   const isLinkActive = (href: string) => {
     if (href === '/') return pathname === '/';
+    if (href === '/admin') return pathname === '/admin';
     return pathname === href || pathname.startsWith(`${href}/`);
+  };
+
+  const isAdminSectionActive = pathname === '/admin' || pathname.startsWith('/admin/');
+
+  const renderNavLink = (item: NavItem, onNavigate?: () => void) => {
+    const active = isLinkActive(item.href);
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        className={`nav-link ${active ? 'active' : ''}`}
+        onClick={onNavigate}
+      >
+        {item.label}
+        {item.badge ? <span className="nav-badge">{item.badge}</span> : null}
+      </Link>
+    );
   };
 
   return (
@@ -154,24 +190,46 @@ export function HeaderShell() {
           </div>
         ) : me ? (
           <>
-            {/* Desktop Nav Items */}
             <div className="nav-desktop-links">
-              {nav.map((item) => {
-                const active = isLinkActive(item.href);
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`nav-link ${active ? 'active' : ''}`}
+              {studentNav.map((item) => renderNavLink(item))}
+
+              {isAdmin ? (
+                <div className="nav-dropdown" ref={adminMenuRef}>
+                  <button
+                    type="button"
+                    className={`nav-link nav-dropdown-trigger ${isAdminSectionActive ? 'active' : ''}`}
+                    aria-expanded={adminMenuOpen}
+                    aria-haspopup="true"
+                    onClick={() => setAdminMenuOpen((open) => !open)}
                   >
-                    {item.label}
-                    {item.badge ? <span className="nav-badge">{item.badge}</span> : null}
-                  </Link>
-                );
-              })}
+                    Admin
+                    <span className="nav-dropdown-chevron" aria-hidden="true">
+                      {adminMenuOpen ? '▴' : '▾'}
+                    </span>
+                    {pendingClaims > 0 ? <span className="nav-badge">{pendingClaims}</span> : null}
+                  </button>
+                  {adminMenuOpen ? (
+                    <div className="nav-dropdown-menu">
+                      {adminNav.map((item) => {
+                        const active = isLinkActive(item.href);
+                        return (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            className={`nav-dropdown-item ${active ? 'active' : ''}`}
+                            onClick={() => setAdminMenuOpen(false)}
+                          >
+                            {item.label}
+                            {item.badge ? <span className="nav-badge">{item.badge}</span> : null}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
 
-            {/* Desktop User Actions */}
             <div className="nav-user-section nav-desktop-user">
               {me.image ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -211,7 +269,6 @@ export function HeaderShell() {
               </button>
             </div>
 
-            {/* Mobile Hamburger Button */}
             <button
               type="button"
               className="nav-mobile-toggle"
@@ -233,23 +290,17 @@ export function HeaderShell() {
         )}
       </div>
 
-      {/* Mobile Menu Panel */}
       {me && (
         <div className={`nav-mobile-menu ${mobileOpen ? 'open' : ''}`}>
-          {nav.map((item) => {
-            const active = isLinkActive(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`nav-link ${active ? 'active' : ''}`}
-                onClick={() => setMobileOpen(false)}
-              >
-                <span>{item.label}</span>
-                {item.badge ? <span className="nav-badge">{item.badge}</span> : null}
-              </Link>
-            );
-          })}
+          {studentNav.map((item) => renderNavLink(item, () => setMobileOpen(false)))}
+
+          {isAdmin ? (
+            <>
+              <div className="nav-mobile-section-label">Admin</div>
+              {adminNav.map((item) => renderNavLink(item, () => setMobileOpen(false)))}
+            </>
+          ) : null}
+
           <div style={{ borderTop: '1px solid #f1f5f9', marginTop: '0.5rem', paddingTop: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               {me.image ? (
@@ -275,4 +326,3 @@ export function HeaderShell() {
     </nav>
   );
 }
-
