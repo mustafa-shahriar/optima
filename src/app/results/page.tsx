@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { EXAM_TYPE_LABELS, type ExamType } from '@/lib/exams';
-import { EmptyState, ErrorState, LoadingState, PageHeader, styles } from '@/components/ui';
+import { EmptyState, ErrorState, PageHeader, ResultsSkeleton, styles } from '@/components/ui';
 
 interface Course {
   id: number;
@@ -105,7 +105,7 @@ export default function ResultsPage() {
         </label>
       </div>
 
-      {loading ? <LoadingState label="Loading results…" /> : null}
+      {loading ? <ResultsSkeleton /> : null}
       {error ? <ErrorState message={error} onRetry={load} /> : null}
 
       {!loading && !error && results.length === 0 ? (

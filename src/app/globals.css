@@ -129,3 +129,37 @@ button, input, select, textarea {
   }
 }
 
+/* Loading Spinner & Skeleton Animations */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes skeleton-pulse {
+  0% {
+    opacity: 0.55;
+    background-color: #e2e8f0;
+  }
+  50% {
+    opacity: 1;
+    background-color: #cbd5e1;
+  }
+  100% {
+    opacity: 0.55;
+    background-color: #e2e8f0;
+  }
+}
+
+.skeleton {
+  animation: skeleton-pulse 1.6s ease-in-out infinite;
+  border-radius: 6px;
+  display: inline-block;
+}

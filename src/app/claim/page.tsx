@@ -2,7 +2,7 @@
 
 import type { FormEvent } from 'react';
 import { useCallback, useEffect, useState } from 'react';
-import { EmptyState, ErrorState, LoadingState, PageHeader, StatusPill, styles } from '@/components/ui';
+import { ClaimsSkeleton, EmptyState, ErrorState, PageHeader, Spinner, StatusPill, styles } from '@/components/ui';
 
 interface ClaimRow {
   id: number;
@@ -79,7 +79,8 @@ export default function ClaimPage() {
   if (loading) {
     return (
       <main style={styles.page}>
-        <LoadingState label="Checking your claim status…" />
+        <PageHeader eyebrow="Claim" title="Claim your student record" subtitle="Checking your claim status…" />
+        <ClaimsSkeleton />
       </main>
     );
   }
@@ -180,8 +181,19 @@ export default function ClaimPage() {
             />
           </label>
           <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-            <button type="submit" style={styles.button} disabled={submitting}>
-              {submitting ? 'Submitting…' : pending ? 'Submit correction' : 'Submit claim'}
+            <button
+              type="submit"
+              style={{ ...styles.button, display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
+              disabled={submitting}
+            >
+              {submitting ? (
+                <>
+                  <Spinner size={16} color="#ffffff" />
+                  <span>Submitting…</span>
+                </>
+              ) : (
+                pending ? 'Submit correction' : 'Submit claim'
+              )}
             </button>
             {showCorrection && pending ? (
               <button type="button" style={styles.buttonSecondary} onClick={() => setShowCorrection(false)}>

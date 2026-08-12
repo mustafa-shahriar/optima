@@ -3,7 +3,7 @@
 import type { ChangeEvent, FormEvent } from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import { EXAM_TYPE_LABELS, EXAM_TYPES, type ExamType } from '@/lib/exams';
-import { EmptyState, ErrorState, LoadingState, PageHeader, styles } from '@/components/ui';
+import { EmptyState, ErrorState, PageHeader, Spinner, TableSkeleton, styles } from '@/components/ui';
 import { buildResultsAiPrompt } from '@/lib/import-prompts';
 import { parseResultsCsv, type ParsedResultRow } from '@/lib/csv-parser';
 
@@ -32,7 +32,7 @@ export default function AdminResultsPage() {
   const [rows, setRows] = useState<GridRow[]>([]);
   const [pdfUrl, setPdfUrl] = useState('');
   const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [savingStudentId, setSavingStudentId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -207,7 +207,7 @@ export default function AdminResultsPage() {
       return;
     }
 
-    setSaving(true);
+    setSavingStudentId(row.student.id);
     setError(null);
     setMessage(null);
     try {
@@ -227,7 +227,7 @@ export default function AdminResultsPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to save marks');
     } finally {
-      setSaving(false);
+      setSavingStudentId(null);
     }
   };
 
@@ -263,7 +263,20 @@ export default function AdminResultsPage() {
           <input style={styles.input} value={term} onChange={(e) => setTerm(e.target.value)} placeholder="2026-Spring" required />
         </label>
         <div style={{ display: 'flex', alignItems: 'end' }}>
-          <button type="submit" style={styles.button}>Load student grid</button>
+          <button
+            type="submit"
+            style={{ ...styles.button, display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <Spinner size={16} color="#ffffff" />
+                <span>Loading grid…</span>
+              </>
+            ) : (
+              'Load student grid'
+            )}
+          </button>
         </div>
       </form>
 
@@ -373,9 +386,16 @@ export default function AdminResultsPage() {
                   type="button"
                   onClick={handleBulkSubmit}
                   disabled={importingBulk || !courseId || !term.trim()}
-                  style={styles.button}
+                  style={{ ...styles.button, display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
                 >
-                  {importingBulk ? 'Importing Results…' : `Import Results for ${parsedRows.length} Student(s)`}
+                  {importingBulk ? (
+                    <>
+                      <Spinner size={16} color="#ffffff" />
+                      <span>Importing Results…</span>
+                    </>
+                  ) : (
+                    `Import Results for ${parsedRows.length} Student(s)`
+                  )}
                 </button>
                 {(!courseId || !term.trim()) && (
                   <p style={{ color: '#dc2626', fontSize: 13, margin: '0.35rem 0 0' }}>
@@ -407,7 +427,7 @@ export default function AdminResultsPage() {
 
       {error ? <div style={{ marginBottom: '1rem' }}><ErrorState message={error} /></div> : null}
       {message ? <p style={{ color: '#047857', fontWeight: 600, background: '#ecfdf5', padding: '0.75rem', borderRadius: 8 }}>{message}</p> : null}
-      {loading ? <LoadingState label="Loading entry grid…" /> : null}
+      {loading ? <TableSkeleton rows={6} cols={exams.length > 0 ? exams.length + 2 : 5} /> : null}
 
       {!loading && rows.length === 0 && exams.length === 0 ? (
         <EmptyState title="No grid loaded" body="Choose a course and term to begin entering marks or bulk importing." />
@@ -449,8 +469,14 @@ export default function AdminResultsPage() {
                     </td>
                   ))}
                   <td style={styles.td}>
-                    <button type="button" style={styles.button} disabled={saving} onClick={() => saveStudent(row)}>
-                      Save
+                    <button
+                      type="button"
+                      style={{ ...styles.button, display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                      disabled={savingStudentId === row.student.id}
+                      onClick={() => saveStudent(row)}
+                    >
+                      {savingStudentId === row.student.id ? <Spinner size={14} color="#ffffff" /> : null}
+                      <span>Save</span>
                     </button>
                   </td>
                 </tr>
@@ -462,3 +488,4 @@ export default function AdminResultsPage() {
     </main>
   );
 }
+

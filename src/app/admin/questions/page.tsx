@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useState } from 'react';
-import { EmptyState, ErrorState, LoadingState, PageHeader, styles } from '@/components/ui';
+import { EmptyState, ErrorState, PageHeader, QuestionsSkeleton, Spinner, styles } from '@/components/ui';
 
 interface Course {
   id: number;
@@ -33,6 +33,7 @@ export default function AdminQuestionsPage() {
   const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -92,6 +93,7 @@ export default function AdminQuestionsPage() {
 
   const onDelete = async (id: number) => {
     if (!window.confirm('Delete this question entry?')) return;
+    setDeletingId(id);
     try {
       const res = await fetch(`/api/questions/${id}`, { method: 'DELETE' });
       const json = await res.json();
@@ -99,6 +101,8 @@ export default function AdminQuestionsPage() {
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to delete question');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -147,12 +151,23 @@ export default function AdminQuestionsPage() {
           File URL
           <input style={styles.input} value={form.fileUrl} onChange={(e) => setForm({ ...form, fileUrl: e.target.value })} placeholder="https://…/paper.pdf" />
         </label>
-        <button type="submit" style={styles.button} disabled={saving}>
-          {saving ? 'Saving…' : 'Add question'}
+        <button
+          type="submit"
+          style={{ ...styles.button, display: 'inline-flex', alignItems: 'center', gap: '0.5rem', justifySelf: 'start' }}
+          disabled={saving}
+        >
+          {saving ? (
+            <>
+              <Spinner size={16} color="#ffffff" />
+              <span>Saving…</span>
+            </>
+          ) : (
+            'Add question'
+          )}
         </button>
       </form>
 
-      {loading ? <LoadingState /> : null}
+      {loading ? <QuestionsSkeleton /> : null}
 
       {!loading && questions.length === 0 ? (
         <EmptyState title="No questions yet" body="Add the first past paper or question text above." />
@@ -170,7 +185,15 @@ export default function AdminQuestionsPage() {
                   <a href={q.fileUrl} target="_blank" rel="noreferrer" style={{ color: '#2563eb' }}>Open file</a>
                 ) : null}
               </div>
-              <button type="button" style={styles.buttonDanger} onClick={() => onDelete(q.id)}>Delete</button>
+              <button
+                type="button"
+                style={{ ...styles.buttonDanger, display: 'inline-flex', alignItems: 'center', gap: '0.4rem', height: 'fit-content' }}
+                disabled={deletingId === q.id}
+                onClick={() => onDelete(q.id)}
+              >
+                {deletingId === q.id ? <Spinner size={14} color="#dc2626" /> : null}
+                <span>Delete</span>
+              </button>
             </div>
           </article>
         ))}
