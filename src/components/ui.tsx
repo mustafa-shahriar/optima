@@ -5,7 +5,6 @@ export const styles = {
     maxWidth: 1100,
     margin: '0 auto',
     padding: '2rem 1.25rem',
-    fontFamily: 'Georgia, "Times New Roman", serif',
   } as CSSProperties,
   muted: { color: '#475569', lineHeight: 1.6 } as CSSProperties,
   card: {
