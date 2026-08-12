@@ -2,7 +2,7 @@
 
 import type { ChangeEvent, FormEvent } from 'react';
 import { useCallback, useEffect, useState } from 'react';
-import { EmptyState, ErrorState, LoadingState, PageHeader, styles } from '@/components/ui';
+import { EmptyState, ErrorState, PageHeader, Spinner, TableSkeleton, styles } from '@/components/ui';
 import { ROSTER_AI_PROMPT } from '@/lib/import-prompts';
 import { parseRosterCsv, type ParsedRosterRow } from '@/lib/csv-parser';
 
@@ -19,6 +19,7 @@ export default function AdminRosterPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -154,6 +155,7 @@ export default function AdminRosterPage() {
       : `Delete ${student.regNumber} from student records?`;
     if (!window.confirm(confirmMsg)) return;
 
+    setDeletingId(student.id);
     setError(null);
     try {
       const url = claimed
@@ -166,6 +168,8 @@ export default function AdminRosterPage() {
       await load();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to delete student');
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -293,9 +297,16 @@ export default function AdminRosterPage() {
                   type="button"
                   onClick={handleBulkSubmit}
                   disabled={importingBulk}
-                  style={styles.button}
+                  style={{ ...styles.button, display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
                 >
-                  {importingBulk ? 'Importing…' : `Import ${parsedRows.length} Student Record(s)`}
+                  {importingBulk ? (
+                    <>
+                      <Spinner size={16} color="#ffffff" />
+                      <span>Importing…</span>
+                    </>
+                  ) : (
+                    `Import ${parsedRows.length} Student Record(s)`
+                  )}
                 </button>
               </div>
             ) : null}
@@ -320,8 +331,19 @@ export default function AdminRosterPage() {
           </label>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <button type="submit" style={styles.button} disabled={saving}>
-            {saving ? 'Saving…' : editingId ? 'Update' : 'Add'}
+          <button
+            type="submit"
+            style={{ ...styles.button, display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
+            disabled={saving}
+          >
+            {saving ? (
+              <>
+                <Spinner size={16} color="#ffffff" />
+                <span>Saving…</span>
+              </>
+            ) : (
+              editingId ? 'Update' : 'Add'
+            )}
           </button>
           {editingId ? (
             <button type="button" style={styles.buttonSecondary} onClick={resetForm}>Cancel</button>
@@ -329,7 +351,7 @@ export default function AdminRosterPage() {
         </div>
       </form>
 
-      {loading ? <LoadingState /> : null}
+      {loading ? <TableSkeleton rows={5} cols={4} /> : null}
 
       {!loading && students.length === 0 ? (
         <EmptyState title="No student records found" body="Add the first student record or use bulk import to begin." />
@@ -355,7 +377,15 @@ export default function AdminRosterPage() {
                   <td style={styles.td}>
                     <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                       <button type="button" style={styles.buttonSecondary} onClick={() => startEdit(student)}>Edit</button>
-                      <button type="button" style={styles.buttonDanger} onClick={() => onDelete(student)}>Delete</button>
+                      <button
+                        type="button"
+                        style={{ ...styles.buttonDanger, display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                        disabled={deletingId === student.id}
+                        onClick={() => onDelete(student)}
+                      >
+                        {deletingId === student.id ? <Spinner size={14} color="#dc2626" /> : null}
+                        <span>Delete</span>
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -367,3 +397,4 @@ export default function AdminRosterPage() {
     </main>
   );
 }
+

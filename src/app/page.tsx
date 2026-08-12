@@ -1,5 +1,5 @@
-import Link from 'next/link';
 import { getSessionUser } from '@/lib/session';
+import { HomeAuthButton } from './HomeAuthButton';
 
 export default async function HomePage() {
   const user = await getSessionUser();
@@ -17,23 +17,10 @@ export default async function HomePage() {
           Check component-level results, track CGPA, and browse past questions — after you claim your student record.
         </p>
         <div style={{ display: 'flex', gap: '0.85rem', flexWrap: 'wrap', marginTop: '1.75rem' }}>
-          {!user ? (
-            <Link
-              href="/auth/login"
-              style={{ background: '#2563eb', color: 'white', padding: '0.85rem 1.2rem', borderRadius: 8, textDecoration: 'none', fontWeight: 600 }}
-            >
-              Sign in with Google
-            </Link>
-          ) : (
-            <Link
-              href="/dashboard"
-              style={{ background: '#2563eb', color: 'white', padding: '0.85rem 1.2rem', borderRadius: 8, textDecoration: 'none', fontWeight: 600 }}
-            >
-              Go to dashboard
-            </Link>
-          )}
+          <HomeAuthButton loggedIn={Boolean(user)} />
         </div>
       </section>
     </main>
   );
 }
+

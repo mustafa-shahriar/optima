@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from 'react';
-import { EmptyState, ErrorState, LoadingState, PageHeader, styles } from '@/components/ui';
+import { EmptyState, ErrorState, HistorySkeleton, PageHeader, styles } from '@/components/ui';
 
 interface HistoryRow {
   courseCode: string;
@@ -48,7 +48,7 @@ export default function HistoryPage() {
         subtitle="One row per fully-graded course."
       />
 
-      {loading ? <LoadingState /> : null}
+      {loading ? <HistorySkeleton /> : null}
       {error ? <ErrorState message={error} onRetry={load} /> : null}
 
       {!loading && !error ? (

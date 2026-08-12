@@ -5,6 +5,8 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { authClient } from '@/lib/auth-client';
 
+import { GoogleButton, Skeleton, Spinner } from '@/components/ui';
+
 type UserRole = 'student' | 'admin';
 
 interface MeData {
@@ -25,6 +27,8 @@ export function HeaderShell() {
   const [me, setMe] = useState<MeData | null>(null);
   const [pendingClaims, setPendingClaims] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [signingIn, setSigningIn] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
 
@@ -80,19 +84,28 @@ export function HeaderShell() {
     setMobileOpen(false);
   }, [pathname]);
 
-  const handleSignIn = () => {
-    authClient.signIn.social({ provider: 'google', callbackURL: '/dashboard' });
+  const handleSignIn = async () => {
+    setSigningIn(true);
+    try {
+      await authClient.signIn.social({ provider: 'google', callbackURL: '/dashboard' });
+    } catch {
+      setSigningIn(false);
+    }
   };
 
   const handleSignOut = async () => {
-    await authClient.signOut();
-    window.location.href = '/';
+    setSigningOut(true);
+    try {
+      await authClient.signOut();
+      window.location.href = '/';
+    } catch {
+      setSigningOut(false);
+    }
   };
 
   const claimed = Boolean(me?.studentId);
 
   // Build nav items dynamically based on role and claim status.
-  // Options that students cannot visit (e.g. when !claimed) are completely hidden instead of disabled.
   let nav: NavItem[] = [];
 
   if (me?.role === 'admin') {
@@ -115,8 +128,6 @@ export function HeaderShell() {
         { href: '/claim', label: 'Claim' },
       ];
     } else {
-      // For unclaimed students, hide pages they cannot visit (Results, History, Questions)
-      // and show only navbar options that can be used by both students and admin (Dashboard, Claim).
       nav = [
         { href: '/dashboard', label: 'Dashboard' },
         { href: '/claim', label: 'Claim' },
@@ -136,7 +147,12 @@ export function HeaderShell() {
           Optima
         </Link>
 
-        {me ? (
+        {loading ? (
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            <Skeleton width={32} height={32} style={{ borderRadius: '50%' }} />
+            <Skeleton width={100} height={16} />
+          </div>
+        ) : me ? (
           <>
             {/* Desktop Nav Items */}
             <div className="nav-desktop-links">
@@ -169,9 +185,29 @@ export function HeaderShell() {
               <button
                 type="button"
                 onClick={handleSignOut}
-                style={{ border: '1px solid #cbd5e1', background: '#fff', color: '#dc2626', padding: '0.4rem 0.8rem', borderRadius: 999, cursor: 'pointer', fontSize: 13, fontWeight: 500 }}
+                disabled={signingOut}
+                style={{
+                  border: '1px solid #cbd5e1',
+                  background: '#fff',
+                  color: '#dc2626',
+                  padding: '0.4rem 0.8rem',
+                  borderRadius: 999,
+                  cursor: signingOut ? 'not-allowed' : 'pointer',
+                  fontSize: 13,
+                  fontWeight: 500,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                }}
               >
-                Sign out
+                {signingOut ? (
+                  <>
+                    <Spinner size={12} color="#dc2626" />
+                    <span>Signing out…</span>
+                  </>
+                ) : (
+                  'Sign out'
+                )}
               </button>
             </div>
 
@@ -187,15 +223,12 @@ export function HeaderShell() {
           </>
         ) : (
           <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.75rem' }}>
-            {!loading && (
-              <button
-                type="button"
-                onClick={handleSignIn}
-                style={{ border: 0, background: '#2563eb', color: '#fff', padding: '0.6rem 0.9rem', borderRadius: 999, cursor: 'pointer', fontWeight: 500 }}
-              >
-                Sign in with Google
-              </button>
-            )}
+            <GoogleButton
+              onClick={handleSignIn}
+              loading={signingIn}
+              variant="pill"
+              text="Sign in with Google"
+            />
           </div>
         )}
       </div>

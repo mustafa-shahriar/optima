@@ -2,7 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { EXAM_TYPES, EXAM_TYPE_LABELS, type ExamType } from '@/lib/exams';
-import { EmptyState, ErrorState, LoadingState, PageHeader, styles } from '@/components/ui';
+import { CardSkeleton, EmptyState, ErrorState, PageHeader, Spinner, styles } from '@/components/ui';
 
 interface Course {
   id: number;
@@ -176,10 +176,28 @@ export default function AdminCoursesPage() {
           </label>
           <label style={styles.label}>Academic year<input style={styles.input} type="number" value={form.academicYear} onChange={(e) => setForm({ ...form, academicYear: e.target.value })} required /></label>
         </div>
-        <button type="submit" style={styles.button} disabled={saving}>{saving ? 'Saving…' : 'Create course'}</button>
+        <button
+          type="submit"
+          style={{ ...styles.button, display: 'inline-flex', alignItems: 'center', gap: '0.5rem', justifySelf: 'start' }}
+          disabled={saving}
+        >
+          {saving ? (
+            <>
+              <Spinner size={16} color="#ffffff" />
+              <span>Saving…</span>
+            </>
+          ) : (
+            'Create course'
+          )}
+        </button>
       </form>
 
-      {loading ? <LoadingState /> : null}
+      {loading ? (
+        <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+          <CardSkeleton height={100} />
+          <CardSkeleton height={100} />
+        </div>
+      ) : null}
 
       {!loading && courses.length === 0 ? (
         <EmptyState title="No courses yet" body="Create a course offering to configure exam components." />
@@ -240,8 +258,20 @@ export default function AdminCoursesPage() {
                   Running total: {total}
                   {total !== 100 ? ' — should add up to 100' : ' ✓'}
                 </p>
-                <button type="button" style={{ ...styles.button, marginTop: '0.75rem' }} onClick={saveWeights} disabled={saving}>
-                  Save exam weights
+                <button
+                  type="button"
+                  style={{ ...styles.button, marginTop: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
+                  onClick={saveWeights}
+                  disabled={saving}
+                >
+                  {saving ? (
+                    <>
+                      <Spinner size={16} color="#ffffff" />
+                      <span>Saving weights…</span>
+                    </>
+                  ) : (
+                    'Save exam weights'
+                  )}
                 </button>
               </>
             ) : (

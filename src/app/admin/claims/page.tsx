@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { EmptyState, ErrorState, LoadingState, PageHeader, StatusPill, styles } from '@/components/ui';
+import { ClaimsSkeleton, EmptyState, ErrorState, PageHeader, Spinner, StatusPill, styles } from '@/components/ui';
 
 interface Claim {
   id: number;
@@ -82,7 +82,7 @@ export default function AdminClaimsPage() {
       />
 
       {error ? <div style={{ marginBottom: '1rem' }}><ErrorState message={error} onRetry={load} /></div> : null}
-      {loading ? <LoadingState label="Loading pending claims…" /> : null}
+      {loading ? <ClaimsSkeleton /> : null}
 
       {!loading && claims.length === 0 ? (
         <EmptyState title="No pending claims" body="New student claim requests will show up here." />
@@ -139,19 +139,21 @@ export default function AdminClaimsPage() {
                     <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.75rem', flexWrap: 'wrap' }}>
                       <button
                         type="button"
-                        style={styles.button}
+                        style={{ ...styles.button, display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
                         disabled={busyId === claim.id}
                         onClick={() => decide(claim.id, 'approved')}
                       >
-                        Approve
+                        {busyId === claim.id ? <Spinner size={14} color="#ffffff" /> : null}
+                        <span>Approve</span>
                       </button>
                       <button
                         type="button"
-                        style={styles.buttonDanger}
+                        style={{ ...styles.buttonDanger, display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
                         disabled={busyId === claim.id}
                         onClick={() => decide(claim.id, 'rejected')}
                       >
-                        Reject
+                        {busyId === claim.id ? <Spinner size={14} color="#dc2626" /> : null}
+                        <span>Reject</span>
                       </button>
                     </div>
                   </article>
