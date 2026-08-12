@@ -12,15 +12,16 @@ export async function GET(request: Request) {
   const studentIdParam = searchParams.get('studentId');
 
   let studentId: number | null = null;
-  if (userOrErr.role === 'admin') {
-    if (!studentIdParam) return jsonError('studentId is required for admin history lookup');
+  if (studentIdParam) {
     studentId = Number(studentIdParam);
     if (!Number.isInteger(studentId)) return jsonError('studentId must be an integer');
-  } else {
-    if (!userOrErr.studentId) {
-      return jsonError('Claim a student record before viewing mark history', 403);
-    }
+  } else if (userOrErr.studentId) {
     studentId = userOrErr.studentId;
+  } else {
+    if (userOrErr.role === 'admin') {
+      return jsonError('studentId is required for admin history lookup');
+    }
+    return jsonError('Claim a student record before viewing mark history', 403);
   }
 
   const [history, cgpa] = await Promise.all([

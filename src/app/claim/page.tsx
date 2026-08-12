@@ -13,6 +13,7 @@ interface ClaimRow {
 }
 
 interface MeResponse {
+  role?: 'student' | 'admin';
   studentId: number | null;
   claimStatus: string;
   student: { name: string; regNumber: string; section: string } | null;
@@ -120,7 +121,11 @@ export default function ClaimPage() {
       <PageHeader
         eyebrow="Claim"
         title="Claim your student record"
-        subtitle="Enter the registration number that matches your official student record. An admin must approve before results unlock."
+        subtitle={
+          me?.role === 'admin'
+            ? "Enter your registration number to link your student record directly without needing approval."
+            : "Enter the registration number that matches your official student record. An admin must approve before results unlock."
+        }
       />
 
       {error ? <div style={{ marginBottom: '1rem' }}><ErrorState message={error} /></div> : null}

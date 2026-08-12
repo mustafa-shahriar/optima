@@ -327,6 +327,33 @@ export async function createClaimRequest(userId: string, studentId: number) {
   return rows[0];
 }
 
+export async function createDirectAdminClaim(adminUserId: string, studentId: number) {
+  const database = requireDatabase();
+
+  const claimed = await isStudentClaimed(studentId);
+  if (claimed) {
+    throw new Error('That student record is already linked to another account');
+  }
+
+  await database
+    .update(user)
+    .set({ studentId, updatedAt: new Date() })
+    .where(eq(user.id, adminUserId));
+
+  const rows = await database
+    .insert(claimRequests)
+    .values({
+      userId: adminUserId,
+      studentId,
+      status: 'approved',
+      decidedBy: adminUserId,
+      decidedAt: new Date(),
+    })
+    .returning();
+
+  return rows[0];
+}
+
 export async function decideClaim(input: {
   claimId: number;
   adminId: string;
@@ -944,6 +971,114 @@ export async function getQuestions() {
 
 export async function getClaims() {
   return listClaims();
+}
+
+export async function bulkCreateStudents(
+  items: Array<{ regNumber: string; name: string; section: string }>,
+  actorId: string,
+) {
+  const database = requireDatabase();
+  let createdCount = 0;
+  let skippedCount = 0;
+  const errors: string[] = [];
+
+  for (const item of items) {
+    const regNumber = item.regNumber?.trim();
+    const name = item.name?.trim();
+    const section = item.section?.trim();
+
+    if (!regNumber || !name || !section) {
+      errors.push(`Skipped row with missing fields: ${JSON.stringify(item)}`);
+      skippedCount++;
+      continue;
+    }
+
+    const existing = await database
+      .select({ id: students.id })
+      .from(students)
+      .where(eq(students.regNumber, regNumber))
+      .limit(1);
+
+    if (existing[0]) {
+      skippedCount++;
+      continue;
+    }
+
+    try {
+      await database.insert(students).values({
+        regNumber,
+        name,
+        section,
+      });
+      createdCount++;
+    } catch (err) {
+      errors.push(`Error adding ${regNumber}: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      skippedCount++;
+    }
+  }
+
+  await writeAuditLog({
+    actorId,
+    action: 'roster_bulk_imported',
+    targetType: 'student',
+    metadata: { createdCount, skippedCount, totalItems: items.length },
+  });
+
+  return { createdCount, skippedCount, total: items.length, errors };
+}
+
+export async function bulkUpsertResults(
+  courseId: number,
+  term: string,
+  items: Array<{ regNumber: string; marks: Array<{ examId: number; marksObtained: number }> }>,
+  actorId: string,
+) {
+  let savedStudentsCount = 0;
+  let totalComponentsSaved = 0;
+  const unmappedRegNumbers: string[] = [];
+  const errors: string[] = [];
+
+  const allStudents = await listStudents();
+  const studentMapByReg = new Map(allStudents.map((s) => [s.regNumber.toUpperCase(), s.id]));
+
+  for (const item of items) {
+    const regUpper = item.regNumber?.trim().toUpperCase();
+    if (!regUpper) continue;
+    const studentId = studentMapByReg.get(regUpper);
+
+    if (!studentId) {
+      unmappedRegNumbers.push(item.regNumber);
+      continue;
+    }
+
+    if (!item.marks || item.marks.length === 0) {
+      continue;
+    }
+
+    try {
+      const saved = await upsertResultComponents({
+        studentId,
+        courseId,
+        term,
+        enteredBy: actorId,
+        marks: item.marks,
+      });
+      savedStudentsCount++;
+      totalComponentsSaved += saved.length;
+    } catch (err) {
+      errors.push(`Error saving results for ${item.regNumber}: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    }
+  }
+
+  await writeAuditLog({
+    actorId,
+    action: 'results_bulk_imported',
+    targetType: 'course',
+    targetId: courseId,
+    metadata: { courseId, term, savedStudentsCount, totalComponentsSaved, unmappedRegNumbers },
+  });
+
+  return { savedStudentsCount, totalComponentsSaved, unmappedRegNumbers, errors };
 }
 
 export { inArray };

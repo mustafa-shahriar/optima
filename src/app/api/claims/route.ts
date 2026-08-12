@@ -1,6 +1,7 @@
 import { jsonError, jsonOk, requireAdmin, requireUser, isErrorResponse, requireDb } from '@/lib/api';
 import {
   createClaimRequest,
+  createDirectAdminClaim,
   getClaimsForUser,
   getStudentByRegNumber,
   listClaims,
@@ -39,10 +40,6 @@ export async function POST(request: Request) {
   const dbOrErr = requireDb();
   if (isErrorResponse(dbOrErr)) return dbOrErr;
 
-  if (userOrErr.role === 'admin') {
-    return jsonError('Admins do not submit student claims', 403);
-  }
-
   if (userOrErr.studentId) {
     return jsonError('Your account is already linked to a student record', 400);
   }
@@ -65,6 +62,24 @@ export async function POST(request: Request) {
   }
 
   try {
+    if (userOrErr.role === 'admin') {
+      const claim = await createDirectAdminClaim(userOrErr.id, student.id);
+      await writeAuditLog({
+        actorId: userOrErr.id,
+        action: 'claim_direct_approved',
+        targetType: 'claim_request',
+        targetId: claim.id,
+        metadata: { regNumber, studentId: student.id },
+      });
+      return jsonOk({
+        id: claim.id,
+        status: claim.status,
+        studentId: claim.studentId,
+        regNumber: student.regNumber,
+        requestedAt: claim.requestedAt,
+      }, { status: 201 });
+    }
+
     const claim = await createClaimRequest(userOrErr.id, student.id);
     await writeAuditLog({
       actorId: userOrErr.id,

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { authClient } from '@/lib/auth-client';
 
@@ -17,7 +18,6 @@ interface MeData {
 interface NavItem {
   href: string;
   label: string;
-  locked?: boolean;
   badge?: number;
 }
 
@@ -25,6 +25,8 @@ export function HeaderShell() {
   const [me, setMe] = useState<MeData | null>(null);
   const [pendingClaims, setPendingClaims] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     let mounted = true;
@@ -68,8 +70,15 @@ export function HeaderShell() {
     }
 
     load();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, []);
+
+  // Automatically close mobile menu on route change
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   const handleSignIn = () => {
     authClient.signIn.social({ provider: 'google', callbackURL: '/dashboard' });
@@ -81,55 +90,73 @@ export function HeaderShell() {
   };
 
   const claimed = Boolean(me?.studentId);
-  const studentNav: NavItem[] = [
-    { href: '/dashboard', label: 'Dashboard' },
-    { href: '/results', label: 'My Results', locked: !claimed },
-    { href: '/history', label: 'Mark History', locked: !claimed },
-    { href: '/questions', label: 'Question Bank', locked: !claimed },
-    { href: '/claim', label: 'Claim' },
-  ];
 
-  const adminNav: NavItem[] = [
-    { href: '/dashboard', label: 'Dashboard' },
-    { href: '/admin/roster', label: 'Student Records' },
-    { href: '/admin/claims', label: 'Claims', badge: pendingClaims },
-    { href: '/admin/courses', label: 'Courses' },
-    { href: '/admin/results', label: 'Results' },
-    { href: '/admin/questions', label: 'Question Bank' },
-  ];
+  // Build nav items dynamically based on role and claim status.
+  // Options that students cannot visit (e.g. when !claimed) are completely hidden instead of disabled.
+  let nav: NavItem[] = [];
 
-  const nav = me?.role === 'admin' ? adminNav : studentNav;
+  if (me?.role === 'admin') {
+    nav = [
+      { href: '/dashboard', label: 'Dashboard' },
+      { href: '/admin/roster', label: 'Student Records' },
+      { href: '/admin/claims', label: 'Claims', badge: pendingClaims },
+      { href: '/admin/courses', label: 'Courses' },
+      { href: '/admin/results', label: 'Results' },
+      { href: '/admin/questions', label: 'Question Bank' },
+      { href: '/claim', label: 'Claim Record' },
+    ];
+  } else if (me?.role === 'student') {
+    if (claimed) {
+      nav = [
+        { href: '/dashboard', label: 'Dashboard' },
+        { href: '/results', label: 'My Results' },
+        { href: '/history', label: 'Mark History' },
+        { href: '/questions', label: 'Question Bank' },
+        { href: '/claim', label: 'Claim' },
+      ];
+    } else {
+      // For unclaimed students, hide pages they cannot visit (Results, History, Questions)
+      // and show only navbar options that can be used by both students and admin (Dashboard, Claim).
+      nav = [
+        { href: '/dashboard', label: 'Dashboard' },
+        { href: '/claim', label: 'Claim' },
+      ];
+    }
+  }
+
+  const isLinkActive = (href: string) => {
+    if (href === '/') return pathname === '/';
+    return pathname === href || pathname.startsWith(`${href}/`);
+  };
 
   return (
-    <nav style={{ borderBottom: '1px solid #e2e8f0', background: '#fff' }}>
-      <div style={{ maxWidth: 1120, margin: '0 auto', padding: '1rem 1.25rem', display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
-        <Link href="/" style={{ fontWeight: 700, color: '#2563eb', textDecoration: 'none', fontFamily: 'Georgia, serif' }}>
+    <nav style={{ borderBottom: '1px solid #e2e8f0', background: '#fff', position: 'sticky', top: 0, zIndex: 50 }}>
+      <div className="nav-container">
+        <Link href="/" className="nav-brand">
           Optima
         </Link>
 
         {me ? (
           <>
-            {nav.map((item) =>
-              item.locked ? (
-                <span
-                  key={item.href}
-                  title="Available after your claim is approved"
-                  style={{ color: '#94a3b8', cursor: 'not-allowed', textDecoration: 'none' }}
-                >
-                  {item.label}
-                </span>
-              ) : (
-                <Link key={item.href} href={item.href} style={{ color: '#334155', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                  {item.label}
-                  {item.badge ? (
-                    <span style={{ background: '#2563eb', color: '#fff', borderRadius: 999, fontSize: 11, fontWeight: 700, padding: '0.1rem 0.45rem' }}>
-                      {item.badge}
-                    </span>
-                  ) : null}
-                </Link>
-              ),
-            )}
-            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+            {/* Desktop Nav Items */}
+            <div className="nav-desktop-links">
+              {nav.map((item) => {
+                const active = isLinkActive(item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`nav-link ${active ? 'active' : ''}`}
+                  >
+                    {item.label}
+                    {item.badge ? <span className="nav-badge">{item.badge}</span> : null}
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Desktop User Actions */}
+            <div className="nav-user-section nav-desktop-user">
               {me.image ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={me.image} alt={me.name} style={{ width: 32, height: 32, borderRadius: '50%' }} />
@@ -138,14 +165,25 @@ export function HeaderShell() {
                   {me.name?.charAt(0)?.toUpperCase() ?? '?'}
                 </span>
               )}
+              <span style={{ fontSize: 14, fontWeight: 500, color: '#334155' }}>{me.name}</span>
               <button
                 type="button"
                 onClick={handleSignOut}
-                style={{ border: '1px solid #cbd5e1', background: '#fff', color: '#dc2626', padding: '0.5rem 0.8rem', borderRadius: 999, cursor: 'pointer', fontSize: 13, fontWeight: 500 }}
+                style={{ border: '1px solid #cbd5e1', background: '#fff', color: '#dc2626', padding: '0.4rem 0.8rem', borderRadius: 999, cursor: 'pointer', fontSize: 13, fontWeight: 500 }}
               >
                 Sign out
               </button>
             </div>
+
+            {/* Mobile Hamburger Button */}
+            <button
+              type="button"
+              className="nav-mobile-toggle"
+              aria-label="Toggle navigation menu"
+              onClick={() => setMobileOpen(!mobileOpen)}
+            >
+              {mobileOpen ? '✕' : '☰'}
+            </button>
           </>
         ) : (
           <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.75rem' }}>
@@ -161,6 +199,47 @@ export function HeaderShell() {
           </div>
         )}
       </div>
+
+      {/* Mobile Menu Panel */}
+      {me && (
+        <div className={`nav-mobile-menu ${mobileOpen ? 'open' : ''}`}>
+          {nav.map((item) => {
+            const active = isLinkActive(item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`nav-link ${active ? 'active' : ''}`}
+                onClick={() => setMobileOpen(false)}
+              >
+                <span>{item.label}</span>
+                {item.badge ? <span className="nav-badge">{item.badge}</span> : null}
+              </Link>
+            );
+          })}
+          <div style={{ borderTop: '1px solid #f1f5f9', marginTop: '0.5rem', paddingTop: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              {me.image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={me.image} alt={me.name} style={{ width: 28, height: 28, borderRadius: '50%' }} />
+              ) : (
+                <span style={{ width: 28, height: 28, borderRadius: '50%', background: '#2563eb', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 13 }}>
+                  {me.name?.charAt(0)?.toUpperCase() ?? '?'}
+                </span>
+              )}
+              <span style={{ fontSize: 14, fontWeight: 500, color: '#334155' }}>{me.name}</span>
+            </div>
+            <button
+              type="button"
+              onClick={handleSignOut}
+              style={{ border: '1px solid #cbd5e1', background: '#fff', color: '#dc2626', padding: '0.4rem 0.8rem', borderRadius: 999, cursor: 'pointer', fontSize: 13, fontWeight: 500 }}
+            >
+              Sign out
+            </button>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }
+
